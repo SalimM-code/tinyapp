@@ -18,8 +18,15 @@ function generateRandomString() {
 
 
 const urlDatabase = {
-  "b2xVn2": {longURL: "http://www.lighthouselabs.ca"},
-  "9sm5xK": {longURL: "http://www.google.com"}
+  "b2xVn2": {
+    shortURL: 'b2xVn2',
+    longURL: "http://www.lighthouselabs.ca"
+  },
+
+  "9sm5xK": {
+    shortURL: '9sm5xK',
+    longURL: "http://www.google.com"
+  }
 };
 
 app.get("/", (req, res) => {
@@ -30,7 +37,7 @@ app.get("/", (req, res) => {
 // A route handler for Passing data to urls_index.ejs
 app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase };
-  console.log({urls: urlDatabase});
+  console.log(templateVars);
   res.render("urls_index", templateVars)
 })
 
@@ -72,7 +79,9 @@ app.post("/urls", (req, res) => {
 
 //router to handle shortURL request
 app.get('/u/:shortURL', (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL];
+  const longURL = urlDatabase;
+  console.log(longURL)
+  // [req.params.shortURL]
   res.redirect(longURL);
 })
 
