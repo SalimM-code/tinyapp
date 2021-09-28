@@ -80,13 +80,17 @@ app.post("/urls", (req, res) => {
 
 //router to handle shortURL request
 app.get('/u/:shortURL', (req, res) => {
-  let shortURL = req.params.shortURL;
+  let shortURL = req.params.shortURL; //res.params
   let longURL = urlDatabase[shortURL].longURL;
 
   res.redirect(longURL);
   // [req.params.shortURL]
 })
-
+// router handle for delete req
+app.post('/urls/:shortURL/delete', (req, res) => {
+  delete urlDatabase[req.params.shortURL];
+  res.redirect('/urls');
+})
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
