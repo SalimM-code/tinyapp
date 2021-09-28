@@ -50,7 +50,7 @@ app.get("/urls/new", (req, res) => {
 // A route handler for passing data to urls_show.ejs
 app.get("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
-  const longURL = urlDatabase[req.params.shortURL];
+  const longURL = urlDatabase[req.params.shortURL].longURL;
   const templateVars = { 
     shortURL,
     longURL
@@ -64,25 +64,27 @@ app.get("/urls.json", (req, res) => {
   res.json(urlDatabase)
 })
 
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
-})
-//route to handle POST req
+
+//route to handle POST req and adding that new data to our database
 app.post("/urls", (req, res) => {
   
-  const newKey = generateRandomString();
-  urlDatabase[newKey] = {
-    longURL: req.body.longURL
+  const lngURL = req.body.longURL
+  const shortURL = generateRandomString();
+  
+  urlDatabase[shortURL] = {
+    shortURL,
+    longURL: lngURL
   }
-  res.redirect(`/urls/${newKey}`);
+  res.redirect(`/urls/${shortURL}`);
 })
 
 //router to handle shortURL request
 app.get('/u/:shortURL', (req, res) => {
-  const longURL = urlDatabase;
-  console.log(longURL)
-  // [req.params.shortURL]
+  let shortURL = req.params.shortURL;
+  let longURL = urlDatabase[shortURL].longURL;
+
   res.redirect(longURL);
+  // [req.params.shortURL]
 })
 
 app.listen(PORT, () => {
