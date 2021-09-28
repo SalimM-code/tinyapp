@@ -5,6 +5,7 @@ const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
 
+
 function generateRandomString() {
   let result = ' ';
   let characters = 'abcdefghijklmnopqrstuvwxyz0123456789';
@@ -17,25 +18,38 @@ function generateRandomString() {
 
 
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  "b2xVn2": {longURL: "http://www.lighthouselabs.ca"},
+  "9sm5xK": {longURL: "http://www.google.com"}
 };
 
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
 
+
+// A route handler for Passing data to urls_index.ejs
 app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase };
+  console.log({urls: urlDatabase});
   res.render("urls_index", templateVars)
 })
+
+
 //route to render POST req
 app.get("/urls/new", (req, res) => {
   res.render("urls_new")
 })
 
+// A route handler for passing data to urls_show.ejs
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]}
+  const shortURL = req.params.shortURL;
+  const longURL = urlDatabase[req.params.shortURL];
+  const templateVars = { 
+    shortURL,
+    longURL
+  }
+  console.log(templateVars);
+
   res.render("urls_show", templateVars);
 })
 
@@ -48,8 +62,18 @@ app.get("/hello", (req, res) => {
 })
 //route to handle POST req
 app.post("/urls", (req, res) => {
-  console.log(req.body);
-  res.send("Ok");
+  
+  const newKey = generateRandomString();
+  urlDatabase[newKey] = {
+    longURL: req.body.longURL
+  }
+  res.redirect(`/urls/${newKey}`);
+})
+
+//router to handle shortURL request
+app.get('/u/:shortURL', (req, res) => {
+  const longURL = urlDatabase[req.params.shortURL];
+  res.redirect(longURL);
 })
 
 app.listen(PORT, () => {
