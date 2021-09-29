@@ -2,8 +2,11 @@ const express = require("express");
 const app = express();
 const PORT = 3000; // default port 8080
 const bodyParser = require("body-parser");
+const cookie = require('cookie-parser');
+const cookieParser = require("cookie-parser");
 app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
+app.use(cookieParser());
 
 
 function generateRandomString() {
@@ -30,13 +33,16 @@ const urlDatabase = {
 };
 
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  res.redirect("/login");
 });
 
 
 // A route handler for Passing data to urls_index.ejs
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase };
+  const templateVars = { 
+    urls: urlDatabase,
+    username: req.cookies['username']
+  };
   console.log(templateVars);
   res.render("urls_index", templateVars)
 })
@@ -44,6 +50,10 @@ app.get("/urls", (req, res) => {
 
 //route to render POST req
 app.get("/urls/new", (req, res) => {
+const templateVars = {
+  username: req.cookies['username']
+}
+
   res.render("urls_new")
 })
 
@@ -53,7 +63,8 @@ app.get("/urls/:shortURL", (req, res) => {
   const longURL = urlDatabase[req.params.shortURL].longURL;
   const templateVars = { 
     shortURL,
-    longURL
+    longURL,
+    username: req.cookies['username']
   }
   console.log(templateVars);
 
@@ -89,6 +100,21 @@ app.get('/u/:shortURL', (req, res) => {
 // router handle for delete req
 app.post('/urls/:shortURL/delete', (req, res) => {
   delete urlDatabase[req.params.shortURL];
+  res.redirect('/urls');
+})
+//handler for update
+app.post("/urls/:shortURL", (req, res) => {
+  let shortURL = req.params.shortURL;
+  let newLongURL = req.body.longURL
+  urlDatabase[shortURL].longURL = newLongURL;
+
+  res.redirect('/urls');
+})
+// handler for Post to login
+app.post('/login', (req, res) => {
+  const username = req.body.username;
+  console.log(username)
+  res.cookie('username', username)
   res.redirect('/urls');
 })
 app.listen(PORT, () => {
