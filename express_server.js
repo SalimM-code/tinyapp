@@ -176,6 +176,15 @@ app.post('/logout', (req, res) => {
   res.redirect('/urls')
 })
 
+// handler to return a template for login
+
+app.get('/login', (req, res) => {
+  const cookieVal= req.cookies.user_id;
+  let user = getUserObject(userDB, cookieVal);
+  const templateVars = {user};
+  res.render('login', templateVars);
+})
+
 // handler to return template for register
 app.get('/register', (req, res) => {
   const cookieVal = req.cookies.user_id;
