@@ -19,6 +19,7 @@
         <tr>
           <th scope="col">Short URL</th>
           <th scope="col">Long URL</th>
+          <th scope="col">Edit</th>
           <th scope="col">Delete</th>
         </tr>
       </thead>
@@ -31,9 +32,19 @@
             </td>
 
             <td>
+              <form method="POST" action="/urls/<%= url %>">
+                <input type="submit" value="Edit" class="btn btn-outline-primary">
+                
+                  Edit
+                </button>
+              </form>
+            </td>
+
+            <td>
               <!-- DELETE FORM -->
               <form method="POST" action="/urls/<%= url%>/delete">
-                <button type="submit" style="padding: 0.25em 1em; color: whitesmoke; display: inline-block; border-radius: 10%; ;">Delete</button>
+                <input type="submit" value="Delete" class="btn btn-outline-danger">
+                
               </form>
             </td>
           </tr>
