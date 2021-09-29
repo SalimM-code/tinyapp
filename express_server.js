@@ -54,17 +54,29 @@ const getUserObject = function(userDB, userID) {
   }
 }
 // function to create new user
-const createUser = function(email, password, user) {
+const createUser = function(email, password, users) {
   const userID = generateRandomString();
   // console.log(userID);
 
-  user[userID] = {
+  users[userID] = {
     id: userID,
     email,
     password
   };
 
   return userID
+}
+
+// verify user email --> return user if email match or false if no match is found
+const verify = function (email, password, users) {
+  // find user by email
+  for (let userID in users) {
+    const user = users[userID]
+    if (email === user.email) {
+      return user
+    }
+  }
+  return false
 }
 
 app.get("/", (req, res) => {
@@ -74,9 +86,10 @@ app.get("/", (req, res) => {
 
 // A route handler for Passing data to urls_index.ejs
 app.get("/urls", (req, res) => {
-  let userObj = getUserObject(userDB, req.cookies('user_id'));
+  const cookieVal = req.cookies.user_id;
+  let user = getUserObject(userDB, cookieVal);
   const templateVars = { 
-    userObj,
+    user,
     urls: urlDatabase
   };
   // console.log(templateVars);
@@ -86,8 +99,9 @@ app.get("/urls", (req, res) => {
 
 //route to render POST req
 app.get("/urls/new", (req, res) => {
-  let userObj = getUserObject(userDB, req.cookies('user_id'));
-  const templateVars = userObj;
+  const cookieVal = req.cookies.user_id;
+  let user = getUserObject(userDB, cookieVal);
+  const templateVars = {user};
 
   res.render("urls_new", templateVars)
 })
@@ -96,10 +110,13 @@ app.get("/urls/new", (req, res) => {
 app.get("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   const longURL = urlDatabase[req.params.shortURL].longURL;
+  const cookieVal = req.cookies.user_id;
+  let user = getUserObject(userDB, cookieVal);
+
   const templateVars = { 
     shortURL,
     longURL,
-    username: req.cookies['username']
+    user
   }
   // console.log(templateVars);
 
@@ -155,28 +172,42 @@ app.post('/login', (req, res) => {
 
 // handler for logout
 app.post('/logout', (req, res) => {
-  res.clearCookie('username');
+  res.clearCookie('user_id');
   res.redirect('/urls')
 })
 
 // handler to return template for register
 app.get('/register', (req, res) => {
-  let userObj = getUserObject(userDB, req.cookies('user_id'));
-  const templateVars = userObj;
+  const cookieVal = req.cookies.user_id;
+  let user = getUserObject(userDB, cookieVal);
+
+  // let user = null
+  const templateVars = {user};
   res.render('register', templateVars)
 })
+
+
 
 app.post('/register', (req, res) => {
   console.log('req.body', req.body);
   
   const {email, password} = req.body;
 
+  if (email === '' && password === '') {
+    return res.status(400).send('Email & password cannot be empty')
+  }
+
+  const userFound = verify(email, password, userDB);
+  if (userFound) {
+    res.status(400).send('Sorry, that user already exists!');
+    return;
+  }
+
+  // if user is false, create new user
   const userID = createUser(email, password, userDB)
-  console.log(userID)
 
   //set cookie to the userID
   res.cookie('user_id', userID)
-  console.log(userDB)
 
   res.redirect('/urls')
 })
