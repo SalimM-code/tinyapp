@@ -54,7 +54,7 @@ const templateVars = {
   username: req.cookies['username']
 }
 
-  res.render("urls_new")
+  res.render("urls_new", templateVars)
 })
 
 // A route handler for passing data to urls_show.ejs
@@ -116,6 +116,12 @@ app.post('/login', (req, res) => {
   console.log(username)
   res.cookie('username', username)
   res.redirect('/urls');
+})
+
+// handler for logout
+app.post('/logout', (req, res) => {
+  res.clearCookie('username');
+  res.redirect('/urls')
 })
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
