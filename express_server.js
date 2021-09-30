@@ -247,16 +247,6 @@ app.post('/logout', (req, res) => {
   req.session = null;
   res.redirect('/login')
 })
-
-// handler to return a template for login
-
-
-
-// handler to return template for register
-
-
-
-
 app.post('/register', (req, res) => {
   const email = req.body.email;
   // const password = req.body.password;
