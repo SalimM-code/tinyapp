@@ -47,18 +47,31 @@ const userDB = {
     password: 'user2password'
   }
 }
+// function for finding longURL
+
+const findLongURL = function(userID, Db) {
+  let longURL;
+  for (let key in Db) {
+    console.log('keys', key)
+    if (key === userID) {
+      longURL = Db[key].longURL 
+    }
+  };
+    
+    return longURL
+}
 
 // function that gets urls for user
 const urlsForUser = function(userID) {
-  console.log('urlDB', urlDatabase)
+
   let usersObject = {};
   for (const shortURL in urlDatabase) {
     if(urlDatabase[shortURL].userID === userID) {
-      console.log('looping')
+
       usersObject[shortURL] = urlDatabase[shortURL]
     }
   }
-  console.log('userOBJ', usersObject)
+
   return usersObject;
 }
 // function to check if user exists
@@ -72,7 +85,7 @@ const getUserById = function(userDB, userID) {
 // function to create new user
 const createUser = function(email, password, users) {
   const userID = generateRandomString();
-  // console.log(userID);
+
 
   users[userID] = {
     id: userID,
@@ -102,54 +115,58 @@ app.get("/", (req, res) => {
 
 // A route handler for Passing data to urls_index.ejs
 app.get("/urls", (req, res) => {
-  const cookieVal = req.cookies.user_id;
-  let user = getUserById(userDB, cookieVal);
+  if(!userDB[req.cookies.user_id]) {
+    return res.status(400).send('You are NOT logged in!! Please login here <a href="/login">login</a> or Register <a href = "/register">register</a> to view your urls');
+  }
+  const userID = req.cookies.user_id;
+
+
   const templateVars = { 
-    user,
+    user: getUserById(userDB, userID),
     urls: urlsForUser(cookieVal)
   };
-  // console.log(templateVars);
+
   res.render("urls_index", templateVars)
 })
 
 
 //route to render POST req
 app.get("/urls/new", (req, res) => {
+  if(!userDB[req.cookies.user_id]) {
+    return res.status(400).send('You are NOT logged in!! Please login here <a href="/login">login</a> or Register <a href = "/register">register</a> to view your urls');
+  }
   const cookieVal = req.cookies.user_id;
   let user = getUserById(userDB, cookieVal);
-  // check to see if user is logged
-  if (user === null) {
-    res.redirect('/login')
-  } else {
+
     const templateVars = {user};
 
     res.render("urls_new", templateVars)
-  }
-
 })
 // ****HELPING ACCESING KEYS OF THE OBJECT******//
 // A route handler for passing data to urls_show.ejs
 app.get("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
-  console.log('1',shortURL)
-  const objKey = generateRandomString()
-  console.log('3', objKey)
-  const longURL = urlDatabase[shortURL] ? urlDatabase[shortURL]['longURL'] : '';
-  console.log('4', urlDatabase)
+  console.log('shortUrl', shortURL)
+  const userID = req.cookies.user_id;
+  console.log('USERid', userID)
+  let user = getUserById(userDB, userID);
   
-  const cookieVal = req.cookies.user_id;
-  // console.log('2', shortURL)
-  // const usersObj = urlsForUser(cookieVal)
-  // console.log('3', cookieVal)
-  // console.log('1',usersObj)
-  let user = getUserById(userDB, cookieVal);
+  if(!urlDatabase[shortURL]) {
+    res.send(error)
+    return
+  }
+
+  if (userID !== urlDatabase[shortURL].userID) {
+    res.send(error)
+  }
+
+  const longURL = urlDatabase[shortURL]['longURL'];
 
   const templateVars = { 
     shortURL,
     longURL,
     user
   }
-  // console.log(templateVars);
 
   res.render("urls_show", templateVars);
 })
@@ -163,13 +180,14 @@ app.get("/urls.json", (req, res) => {
 app.post("/urls", (req, res) => {
   const userID = req.cookies.user_id
   const longURL = req.body.longURL
-  const dataBaseKey = generateRandomString();
+  const shortUrlKey = generateRandomString();
   
-  urlDatabase[dataBaseKey] = {
+  urlDatabase[shortUrlKey] = {
     userID,
     longURL
   }
-  res.redirect(`/urls/${userID}`);
+  
+  res.redirect(`/urls`);
 })
 
 //router to redirect to the long Url given the shortURL
@@ -199,9 +217,9 @@ app.post("/urls/:shortURL", (req, res) => {
 app.post('/login', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  console.log('email:', email, 'pass', password, 'userDB', userDB)
+
   const user = verifyEmail(email, password, userDB);
-  console.log(user)
+
   if (user) {
     if (password === user.password) {
       res.cookie('user_id', user.id)
@@ -213,13 +231,13 @@ app.post('/login', (req, res) => {
     res.status(403).send('Register')
   }
     
-  // console.log(res.cookie('user_id', user.id))
+
 })
 
 // handler for logout
 app.post('/logout', (req, res) => {
   res.clearCookie('user_id');
-  res.redirect('/urls')
+  res.redirect('/login')
 })
 
 // handler to return a template for login
@@ -228,7 +246,7 @@ app.get('/login', (req, res) => {
   const cookieVal= req.cookies.user_id;
   let user = getUserById(userDB, cookieVal);
   const templateVars = {user};
-  console.log('temp', templateVars)
+
   res.render('login', templateVars);
 })
 
@@ -253,7 +271,7 @@ app.post('/register', (req, res) => {
   }
   
   const userFound = verifyEmail(email, password, userDB);
-  console.log('req.body', req.body, 'userDB', userDB);
+
   if (userFound) {
     res.status(400).send('Sorry, that user already exists!');
     return;
@@ -269,5 +287,5 @@ app.post('/register', (req, res) => {
 })
 
 app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
+
 });
