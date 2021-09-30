@@ -123,7 +123,7 @@ app.get("/urls", (req, res) => {
 
   const templateVars = { 
     user: getUserById(userDB, userID),
-    urls: urlsForUser(cookieVal)
+    urls: urlsForUser(userID)
   };
 
   res.render("urls_index", templateVars)
@@ -135,8 +135,8 @@ app.get("/urls/new", (req, res) => {
   if(!userDB[req.cookies.user_id]) {
     return res.status(400).send('You are NOT logged in!! Please login here <a href="/login">login</a> or Register <a href = "/register">register</a> to view your urls');
   }
-  const cookieVal = req.cookies.user_id;
-  let user = getUserById(userDB, cookieVal);
+  const userID = req.cookies.user_id;
+  let user = getUserById(userDB, userID);
 
     const templateVars = {user};
 
@@ -243,8 +243,8 @@ app.post('/logout', (req, res) => {
 // handler to return a template for login
 
 app.get('/login', (req, res) => {
-  const cookieVal= req.cookies.user_id;
-  let user = getUserById(userDB, cookieVal);
+  const userID = req.cookies.user_id;
+  let user = getUserById(userDB, userID);
   const templateVars = {user};
 
   res.render('login', templateVars);
@@ -252,8 +252,8 @@ app.get('/login', (req, res) => {
 
 // handler to return template for register
 app.get('/register', (req, res) => {
-  const cookieVal = req.cookies.user_id;
-  let user = getUserById(userDB, cookieVal);
+  const userID = req.cookies.user_id;
+  let user = getUserById(userDB, userID);
 
   // let user = null
   const templateVars = {user};
