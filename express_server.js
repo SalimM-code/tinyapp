@@ -2,8 +2,10 @@ const express = require("express");
 const app = express();
 const PORT = 3000; // default port 8080
 const bodyParser = require("body-parser");
-const cookie = require('cookie-parser');
+// const cookie = require('cookie-parser');
 const cookieParser = require("cookie-parser");
+const bcrypt = require('bcryptjs');
+const salt = bcrypt.genSaltSync(10);
 
 app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
@@ -97,7 +99,7 @@ const createUser = function(email, password, users) {
 }
 
 // verify user email --> return user if email match or false if no match is found
-const verifyEmail = function (email, password, users) {
+const verifyEmail = function (email, users) {
   // find user by email
   for (let userID in users) {
     const user = users[userID]
@@ -222,12 +224,13 @@ app.post("/urls/:shortURL", (req, res) => {
 // handler for Post to login
 app.post('/login', (req, res) => {
   const email = req.body.email;
-  const password = req.body.password;
+  const hashedPassword = bcrypt.hashSync(req.body.password, salt);
+  // const password = req.body.password;
 
-  const user = verifyEmail(email, password, userDB);
+  const user = verifyEmail(email, userDB);
 
   if (user) {
-    if (password === user.password) {
+    if (hashedPassword === user.password) {
       res.cookie('user_id', user.id)
       res.redirect('/urls');
     } else {
@@ -236,7 +239,7 @@ app.post('/login', (req, res) => {
   } else {
     res.status(403).send('Register')
   }
-    
+    console.log('user', user);
 
 })
 
@@ -269,14 +272,17 @@ app.get('/register', (req, res) => {
 
 
 app.post('/register', (req, res) => {
+  const email = req.body.email;
+  // const password = req.body.password;
+  const hashedPassword = bcrypt.hashSync(req.body.password, salt);
+
+  console.log('email', email, 'pass', hashedPassword)
   
-  const {email, password} = req.body;
-  
-  if (email === '' && password === '') {
+  if (email === '' && hashedPassword === '') {
     return res.status(400).send('Email & password cannot be empty')
   }
   
-  const userFound = verifyEmail(email, password, userDB);
+  const userFound = verifyEmail(email, userDB);
 
   if (userFound) {
     res.status(400).send('Sorry, that user already exists!');
@@ -284,7 +290,8 @@ app.post('/register', (req, res) => {
   }
 
   // if user is false, create new user
-  const userID = createUser(email, password, userDB)
+  const userID = createUser(email, hashedPassword, userDB)
+  
 
   //set cookie to the userID
   res.cookie('user_id', userID)
