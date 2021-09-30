@@ -202,11 +202,17 @@ app.get('/u/:shortURL', (req, res) => {
 })
 // router handle for delete req
 app.post('/urls/:shortURL/delete', (req, res) => {
+  if(urlDatabase[req.params.shortURL].userID !== req.cookies.user_id) {
+    return res.send('You can not Delete this URL')
+  }
   delete urlDatabase[req.params.shortURL];
   res.redirect('/urls');
 })
 //handler for update
 app.post("/urls/:shortURL", (req, res) => {
+  if(urlDatabase[req.params.shortURL].userID !== req.cookies.user_id) {
+    return res.send('You can not Update this URL')
+  }
   let shortURL = req.params.shortURL;
   let newLongURL = req.body.longURL
   urlDatabase[shortURL]['longURL']= newLongURL; //changed this
