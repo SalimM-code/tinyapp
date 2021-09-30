@@ -68,7 +68,7 @@ const createUser = function(email, password, users) {
 }
 
 // verify user email --> return user if email match or false if no match is found
-const verify = function (email, password, users) {
+const verifyEmail = function (email, password, users) {
   // find user by email
   for (let userID in users) {
     const user = users[userID]
@@ -164,10 +164,23 @@ app.post("/urls/:shortURL", (req, res) => {
 })
 // handler for Post to login
 app.post('/login', (req, res) => {
-  const username = req.body.username;
-  // console.log(username)
-  res.cookie('username', username)
-  res.redirect('/urls');
+  const email = req.body.email;
+  const password = req.body.password;
+  console.log('email:', email, 'pass', password, 'userDB', userDB)
+  const user = verifyEmail(email, password, userDB);
+  console.log(user)
+  if (user) {
+    if (password === user.password) {
+      res.cookie('user_id', user.id)
+      res.redirect('/urls');
+    } else {
+      res.status(403).send('Wrong password')
+    }
+  } else {
+    res.status(403).send('Register')
+  }
+    
+  // console.log(res.cookie('user_id', user.id))
 })
 
 // handler for logout
@@ -182,6 +195,7 @@ app.get('/login', (req, res) => {
   const cookieVal= req.cookies.user_id;
   let user = getUserObject(userDB, cookieVal);
   const templateVars = {user};
+  console.log('temp', templateVars)
   res.render('login', templateVars);
 })
 
@@ -198,15 +212,15 @@ app.get('/register', (req, res) => {
 
 
 app.post('/register', (req, res) => {
-  console.log('req.body', req.body);
   
   const {email, password} = req.body;
-
+  
   if (email === '' && password === '') {
     return res.status(400).send('Email & password cannot be empty')
   }
-
-  const userFound = verify(email, password, userDB);
+  
+  const userFound = verifyEmail(email, password, userDB);
+  console.log('req.body', req.body, 'userDB', userDB);
   if (userFound) {
     res.status(400).send('Sorry, that user already exists!');
     return;
