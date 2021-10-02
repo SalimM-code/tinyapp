@@ -136,24 +136,19 @@ app.get("/urls/new", (req, res) => {
 // ****HELPING ACCESING KEYS OF THE OBJECT******//
 // A route handler for passing data to urls_show.ejs
 app.get("/urls/:shortURL", (req, res) => {
-  const shortURL = req.params.shortURL;
-  console.log('shortUrl', shortURL)
-  const userID = req.session.user_id;
-  console.log('USERid', userID)
-  let user = getUserById(userDB, userID);
-  
-  if(!urlDatabase[shortURL]) {
-    res.send(error)
-    return
+
+  if (!user[req.session.user_id]) {
+    return res.send('Please <a href="/login">login</a> to view your short Urls');
   }
-  if (userID !== urlDatabase[shortURL].userID) {
-    res.send(error)
+
+  if(!urlDatabase[req.params.shortURL].userID !== req.session.user_id) {
+    return res.send('You dont have access to viewing this url');
   }
-  const longURL = urlDatabase[shortURL]['longURL'];
+
   const templateVars = { 
-    shortURL,
-    longURL,
-    user
+    shortURL: req.params.shortURL,
+    longURL: urlDatabase[req.params.shortURL]['longURL'],
+    user: user[req.session.user_id]
   }
 
   res.render("urls_show", templateVars);
@@ -161,11 +156,11 @@ app.get("/urls/:shortURL", (req, res) => {
 
 app.get('/u/:shortURL', (req, res) => {
   let shortURL = req.params.shortURL; //res.params
-  // const longURL = urlDatabase[req.params.shortURL].longURL;
+
   const longURL = urlDatabase[shortURL]['longURL']
 
   res.redirect(longURL);
-  // [req.params.shortURL]
+
 })
 
 app.get("/urls.json", (req, res) => {
@@ -267,5 +262,5 @@ app.post('/register', (req, res) => {
 })
 
 app.listen(PORT, () => {
-
+  console.log(`TinyApp listening on port ${PORT}`);
 });
